@@ -3,6 +3,8 @@ project(${DIR})
 add_executable(${DIR} 
 
 main.cpp
+primitives.hpp
+primitives.cpp
 )
 
 target_link_libraries(${DIR} ${OPENCL_LIBRARIES})
