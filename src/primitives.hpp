@@ -35,7 +35,7 @@ class Primitive
 public:
 	Primitive(const Material& material);
 
-	virtual float intersect(const Ray& ray) const = 0;
+	virtual bool intersect(Ray& ray, glm::vec3* intersection) const = 0;
 
 protected:
 	Material m_material;
@@ -45,6 +45,7 @@ class Sphere: public Primitive
 {
 public:
 	Sphere(const Material& material, const glm::vec3& center, const float radius);
+	bool intersect(Ray& ray, glm::vec3* intersection) const;
 
 private:
 	glm::vec3 m_center;
@@ -56,6 +57,7 @@ class Cube: public Primitive
 {
 public:
 	Cube(const Material& material, const glm::vec3& origin, const glm::vec3& width, const glm::vec3& length, const glm::vec3& height);
+	bool intersect(Ray& ray, glm::vec3* intersection) const;
 
 private:
 	glm::vec3 m_origin, m_width, m_length, m_height;
@@ -69,5 +71,7 @@ public:
 private:
 	glm::vec3 m_a, m_b, m_c;
 };
+
+void project(Ray& ray, const glm::vec3& point, glm::vec3* projection);
 
 #endif
