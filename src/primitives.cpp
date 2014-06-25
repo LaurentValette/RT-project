@@ -9,7 +9,7 @@ Sphere::Sphere(const Material& material, const glm::vec3& center, const float ra
 {
 }
 
-bool Sphere::intersect(Ray& ray, glm::vec3* intersection) const
+bool Sphere::intersect(const Ray& ray, glm::vec3* intersection) const
 {
 	glm::vec3 projectedCenter;
 	project(ray, m_center, &projectedCenter);
@@ -34,9 +34,9 @@ Cube::Cube(const Material& material, const glm::vec3& origin, const glm::vec3& w
 {
 }
 
-bool Cube::intersect(Ray& ray, glm::vec3* intersection) const
+bool Cube::intersect(const Ray& ray, glm::vec3* intersection) const
 {
-
+	return false;
 }
 
 Triangle::Triangle(const Material& material, const glm::vec3& a, const glm::vec3& b, const glm::vec3& c):
@@ -44,16 +44,46 @@ Triangle::Triangle(const Material& material, const glm::vec3& a, const glm::vec3
 {
 }
 
+bool Triangle::intersect(const Ray& ray, glm::vec3* intersection) const
+{
+	// We solve the equation: p + lambda d = alpha a + beta b + (1 - alpha - beta) c
+	glm::vec3 v1, v2, v3, b;
+	v1 = ray.getDirection();
+	v2 = -m_a + m_c;
+	v3 = -m_b + m_c;
+	b = -ray.getOrigin() + m_c;
+
+	float det = glm::determinant(glm::mat3(ray.getDirection(), -m_a + m_c, -m_b + m_c));
+	if (det >= -0.00001f && det <= 0.00001f) {
+		// Det = 0: The line is parallel to the plane
+		return false;
+	}  else {
+		// Det != 0: The line has an intersection with the plane, apply Cramer's rule
+		float alpha = glm::determinant(glm::mat3(v1, b, v3)) / det;
+		float beta = glm::determinant(glm::mat3(v1, v2, b)) / det;
+
+		if (alpha >= 0.f && beta >= 0.f && alpha + beta <= 1.f) {
+			// The intersection is in the triangle
+			if (intersection) {
+				*intersection = alpha * m_a + beta * m_b + (1.f - alpha - beta) * m_c;
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
+}
+
 Ray::Ray(const glm::vec3& origin, const glm::vec3& direction): m_origin(origin), m_direction(direction)
 {
 }
 
-glm::vec3& Ray::getOrigin()
+const glm::vec3& Ray::getOrigin() const
 {
 	return m_origin;
 }
 
-glm::vec3& Ray::getDirection()
+const glm::vec3& Ray::getDirection() const
 {
 	return m_direction;
 }
@@ -62,7 +92,7 @@ Material::Material(const glm::vec3& color, const bool isLight): m_color(color), 
 {
 }
 
-glm::vec3& Material::getColor()
+const glm::vec3& Material::getColor() const
 {
 	return m_color;
 }
@@ -72,7 +102,7 @@ bool Material::isLight() const
 	return m_light;
 }
 
-void project(Ray& ray, const glm::vec3& point, glm::vec3* projection)
+void project(const Ray& ray, const glm::vec3& point, glm::vec3* projection)
 {
 	glm::vec3 normalizedDirection = glm::normalize(ray.getDirection());
 	*projection = glm::dot(point - ray.getOrigin(), normalizedDirection) * normalizedDirection + ray.getOrigin();
